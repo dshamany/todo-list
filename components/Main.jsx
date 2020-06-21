@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Button, Text, TextInput, CheckBox } from "react-native";
+import { View, Button, Text, TextInput, CheckBox, Modal } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 function ListItem({ item, idx, remove, toggleDone }) {
     return (
@@ -17,15 +18,22 @@ function ListItem({ item, idx, remove, toggleDone }) {
 
 function Main() {
     const [list, setList] = useState([]);
+    const [modalActive, setModalActive] = useState(false);
     const [item, setItem] = useState({ content: "", done: false });
+    const [calendarIsVisible, setCalendarIsVisible] = useState(false);
+    const [date, setDate] = useState(new Date());
 
     function addItem(item) {
-        if (item.content.length > 0) {
-            let l = list;
+        let l = list;
+        item.date = date;
+        console.log(item);
+        if (item.content && item.content.length > 0) {
             l.push(item);
-            setList(l);
             setItem("");
         }
+        setList(l);
+        setDate(new Date());
+        setModalActive(false);
     }
 
     function deleteItem(idx) {
@@ -46,6 +54,14 @@ function Main() {
 
     return (
         <View style={{ ...styles.container }}>
+            <View style={{ ...styles.actionView }}>
+                <Button
+                    title="Add New"
+                    onPress={() => {
+                        setModalActive(true);
+                    }}
+                />
+            </View>
             <View style={{ ...styles.listView }}>
                 {list.map((item, idx) => {
                     return (
@@ -59,20 +75,56 @@ function Main() {
                     );
                 })}
             </View>
-            <View style={{ ...styles.actionView }}>
-                <TextInput
-                    placeholder="Item"
-                    placeholderTextColor="#111"
-                    onChangeText={(txt) => {
-                        let newItem = { content: txt, done: false };
-                        setItem(newItem);
-                    }}
-                    value={item.content}
-                    onSubmitEditing={() => addItem(item)}
-                    style={{ ...styles.textInput }}
-                />
-                {/* <Button title="Add New" onPress={() => addItem(item)} /> */}
-            </View>
+            <Modal visible={modalActive} transparent={true}>
+                <View style={{ ...styles.partialView }}>
+                    <TextInput
+                        autoFocus={true}
+                        placeholder="Item"
+                        placeholderTextColor="#bbb"
+                        onChangeText={(txt) => {
+                            let newItem = { content: txt, done: false };
+                            setItem(newItem);
+                        }}
+                        value={item.content}
+                        onSubmitEditing={() => addItem(item)}
+                        style={{ ...styles.textInput }}
+                    />
+                    {calendarIsVisible && (
+                        <DateTimePicker
+                            testID="dateTimePicker"
+                            value={date || null}
+                            mode={"date"}
+                            is24Hour={true}
+                            display="default"
+                            minimumDate={new Date()}
+                            onChange={(d) => {
+                                setCalendarIsVisible(false);
+                                setDate(new Date(d.nativeEvent.timestamp));
+                            }}
+                        />
+                    )}
+                    <View
+                        style={{
+                            ...styles.actionView,
+                            justifyContent: "space-between",
+                            padding: 0,
+                            margin: 0,
+                            flexDirection: "row",
+                        }}
+                    >
+                        <Button
+                            title={date.toDateString()}
+                            onPress={() => setCalendarIsVisible(true)}
+                            color="gray"
+                        />
+                        <Button
+                            title="Done"
+                            onPress={() => addItem(item)}
+                            color="green"
+                        />
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -83,7 +135,9 @@ const styles = {
         margin: 20,
         marginTop: 30,
     },
-    actionView: {},
+    actionView: {
+        padding: "5%",
+    },
     checkbox: {
         alignSelf: "center",
     },
@@ -115,15 +169,28 @@ const styles = {
         fontSize: 12,
     },
     textInput: {
-        height: 50,
-        borderTopWidth: 1,
-        borderColor: "#fff",
+        height: 40,
+        borderWidth: 1,
+        borderColor: "#bbb",
+        borderRadius: 5,
         color: "#000",
         marginBottom: 10,
         backgroundColor: "#ffffffbb",
         padding: 10,
+        marginTop: 10,
     },
-    addBtn: {},
+    doneBtn: { alignSelf: "flex-end" },
+    partialView: {
+        flex: 1,
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        backgroundColor: "#ffffffee",
+        padding: "5%",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        marginTop: 320,
+        width: "100%",
+    },
 };
 
 export default Main;
