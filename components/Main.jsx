@@ -1,18 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { View, Button, Text, TextInput, CheckBox, Modal } from "react-native";
+import React, { useState } from "react";
+import {
+    View,
+    Button,
+    Text,
+    TextInput,
+    CheckBox,
+    Modal,
+    TouchableOpacity,
+    FlatList,
+} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 function ListItem({ item, idx, remove, toggleDone }) {
     return (
-        <View style={{ ...styles.listItem }}>
-            <CheckBox
-                value={item.done}
-                style={{ ...styles.checkbox }}
-                onTouchEnd={() => toggleDone(idx)}
-            />
-            <Text style={{ ...styles.textColor }}>{item.content}</Text>
-            <Button title="X" color="#FF4400" onPress={() => remove(idx)} />
-        </View>
+        <TouchableOpacity onPress={() => toggleDone(idx)}>
+            <View style={{ ...styles.listItem }}>
+                <CheckBox value={item.done} style={{ ...styles.checkbox }} />
+                <Text style={{ ...styles.textLabel }}>{item.content}</Text>
+                <Button title="X" color="#FF4400" onPress={() => remove(idx)} />
+            </View>
+        </TouchableOpacity>
     );
 }
 
@@ -25,13 +32,13 @@ function Main() {
 
     function addItem(item) {
         let l = list;
+        item.idx = list.length;
         item.date = date;
-        console.log(item);
         if (item.content && item.content.length > 0) {
             l.push(item);
-            setItem("");
+            setList(l);
         }
-        setList(l);
+        setItem({});
         setDate(new Date());
         setModalActive(false);
     }
@@ -52,28 +59,39 @@ function Main() {
         setItem({});
     }
 
+    var index = 0;
+
     return (
         <View style={{ ...styles.container }}>
-            <View style={{ ...styles.actionView }}>
+            <FlatList
+                key={index}
+                renderItem={() => (
+                    <ListItem
+                        item={list[index]}
+                        idx={index++}
+                        toggleDone={toggleDone}
+                        remove={deleteItem}
+                    />
+                )}
+                data={list}
+                style={{ ...styles.container }}
+            />
+            <View
+                style={{
+                    ...styles.actionView,
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    justifyContent: "center",
+                    padding: 30,
+                }}
+            >
                 <Button
-                    title="Add New"
+                    title="Add New Item"
                     onPress={() => {
                         setModalActive(true);
                     }}
                 />
-            </View>
-            <View style={{ ...styles.listView }}>
-                {list.map((item, idx) => {
-                    return (
-                        <ListItem
-                            key={"LI" + idx}
-                            idx={idx}
-                            item={item}
-                            remove={deleteItem}
-                            toggleDone={toggleDone}
-                        />
-                    );
-                })}
             </View>
             <Modal visible={modalActive} transparent={true}>
                 <View style={{ ...styles.partialView }}>
@@ -92,15 +110,16 @@ function Main() {
                     {calendarIsVisible && (
                         <DateTimePicker
                             testID="dateTimePicker"
-                            value={date || null}
+                            value={date}
                             mode={"date"}
                             is24Hour={true}
-                            display="default"
-                            minimumDate={new Date()}
+                            display="calendar"
+                            minimumDate={new Date("2000-01-01")}
                             onChange={(d) => {
                                 setCalendarIsVisible(false);
                                 setDate(new Date(d.nativeEvent.timestamp));
                             }}
+                            onTouchCancel={() => setDate(new Date())}
                         />
                     )}
                     <View
@@ -113,13 +132,19 @@ function Main() {
                         }}
                     >
                         <Button
-                            title={date.toDateString()}
-                            onPress={() => setCalendarIsVisible(true)}
+                            title={date ? date.toDateString() : "Select Date"}
+                            onPress={() => {
+                                !calendarIsVisible &&
+                                    setCalendarIsVisible(true);
+                            }}
                             color="gray"
                         />
                         <Button
                             title="Done"
-                            onPress={() => addItem(item)}
+                            onPress={() => {
+                                addItem(item);
+                                setCalendarIsVisible(false);
+                            }}
                             color="green"
                         />
                     </View>
@@ -131,39 +156,40 @@ function Main() {
 
 const styles = {
     container: {
-        flex: 1,
-        margin: 20,
-        marginTop: 30,
+        backgroundColor: "#111",
+        height: "100%",
+        padding: 5,
     },
     actionView: {
         padding: "5%",
+        marginBottom: 30,
     },
     checkbox: {
         alignSelf: "center",
     },
-    topContainer: {
-        flex: 1,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        height: 30,
-    },
     listView: {
-        height: "88%",
+        height: "100%",
+        marginLeft: 5,
+        marginRight: 5,
     },
     listItem: {
         width: "100%",
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        marginBottom: 5,
+        backgroundColor: "#000",
+        borderRadius: 3,
+        borderWidth: 1,
+        borderColor: "#999",
         marginBottom: 10,
-        backgroundColor: "#ffffffbb",
     },
-    textColor: {
-        padding: 10,
+    textLabel: {
+        paddingLeft: 10,
+        paddingRight: 10,
         flexShrink: 1,
-        color: "#111",
-        fontSize: 18,
+        color: "#fff",
+        fontSize: 16,
     },
     descriptionText: {
         fontSize: 12,
@@ -171,25 +197,25 @@ const styles = {
     textInput: {
         height: 40,
         borderWidth: 1,
-        borderColor: "#bbb",
+        borderColor: "#777",
         borderRadius: 5,
-        color: "#000",
+        color: "#fff",
         marginBottom: 10,
-        backgroundColor: "#ffffffbb",
+        backgroundColor: "#111111bb",
         padding: 10,
         marginTop: 10,
     },
     doneBtn: { alignSelf: "flex-end" },
     partialView: {
-        flex: 1,
         flexDirection: "column",
         justifyContent: "flex-start",
-        backgroundColor: "#ffffffee",
+        backgroundColor: "#333333ff",
         padding: "5%",
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        marginTop: 320,
-        width: "100%",
+        borderBottomLeftRadius: 10,
+        borderBottomRightRadius: 10,
+        borderBottomWidth: 3,
+        borderColor: "#000",
+        marginTop: 0,
     },
 };
 
