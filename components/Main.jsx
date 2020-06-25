@@ -11,13 +11,29 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-function ListItem({ item, idx, remove, toggleDone }) {
+// Someone elses implementation that seems to work without the need
+// for dependencies
+function uuidv4() {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (
+        c
+    ) {
+        var r = (Math.random() * 16) | 0,
+            v = c == "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
+
+function ListItem({ item, remove, toggleDone }) {
     return (
-        <TouchableOpacity onPress={() => toggleDone(idx)}>
+        <TouchableOpacity onPress={() => toggleDone(item.uuid)}>
             <View style={{ ...styles.listItem }}>
                 <CheckBox value={item.done} style={{ ...styles.checkbox }} />
                 <Text style={{ ...styles.textLabel }}>{item.content}</Text>
-                <Button title="X" color="#FF4400" onPress={() => remove(idx)} />
+                <Button
+                    title="X"
+                    color="#FF4400"
+                    onPress={() => remove(item.uuid)}
+                />
             </View>
         </TouchableOpacity>
     );
@@ -32,7 +48,7 @@ function Main() {
 
     function addItem(item) {
         let l = list;
-        item.idx = list.length;
+        item.uuid = uuidv4();
         item.date = date;
         if (item.content && item.content.length > 0) {
             l.push(item);
@@ -43,18 +59,24 @@ function Main() {
         setModalActive(false);
     }
 
-    function deleteItem(idx) {
+    function deleteItem(uuid) {
         let l = list;
-        l.splice(idx, 1);
+        for (let i = 0; i < l.length; ++i) {
+            if (l[i].uuid == uuid) {
+                l.splice(i, 1);
+            }
+        }
         setList(l);
         setItem({});
     }
 
-    function toggleDone(idx) {
+    function toggleDone(uuid) {
         let l = list;
-        let li = list[idx];
-        let isDone = list[idx].done;
-        isDone ? (li.done = false) : (li.done = true);
+        for (let i = 0; i < l.length; ++i) {
+            if (l[i].uuid == uuid) {
+                l[i].done ? (l[i].done = false) : (l[i].done = true);
+            }
+        }
         setList(l);
         setItem({});
     }
@@ -64,9 +86,9 @@ function Main() {
     return (
         <View style={{ ...styles.container }}>
             <FlatList
-                key={index}
                 renderItem={() => (
                     <ListItem
+                        key={uuidv4()}
                         item={list[index]}
                         idx={index++}
                         toggleDone={toggleDone}
