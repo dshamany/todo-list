@@ -24,6 +24,7 @@ function uuidv4() {
 }
 
 function ListItem({ item, remove, toggleDone }) {
+    console.log(item);
     return (
         <TouchableOpacity onPress={() => toggleDone(item.uuid)}>
             <View style={{ ...styles.listItem }}>
@@ -81,23 +82,26 @@ function Main() {
         setItem({});
     }
 
-    var index = 0;
-
     return (
         <View style={{ ...styles.container }}>
-            <FlatList
-                renderItem={() => (
-                    <ListItem
-                        key={uuidv4()}
-                        item={list[index]}
-                        idx={index++}
-                        toggleDone={toggleDone}
-                        remove={deleteItem}
-                    />
-                )}
-                data={list}
-                style={{ ...styles.container }}
-            />
+            {list.length ? (
+                <FlatList
+                    keyExtractor={(item) => item.uuid}
+                    renderItem={({ item }) => (
+                        <ListItem
+                            item={item}
+                            toggleDone={toggleDone}
+                            remove={deleteItem}
+                        />
+                    )}
+                    data={list}
+                    style={{ ...styles.container, ...styles.centeredText }}
+                />
+            ) : (
+                <View style={{ ...styles.fullScreen }}>
+                    <Text style={{ ...styles.textLabel }}>No Item in List</Text>
+                </View>
+            )}
             <View
                 style={{
                     ...styles.actionView,
@@ -181,6 +185,12 @@ const styles = {
         backgroundColor: "#111",
         height: "100%",
         padding: 5,
+    },
+    fullScreen: {
+        height: "90%",
+        width: "100%",
+        justifyContent: "center",
+        alignItems: "center",
     },
     actionView: {
         padding: "5%",
