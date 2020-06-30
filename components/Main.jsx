@@ -173,6 +173,12 @@ function Main() {
                             }}
                             color="green"
                         />
+                        <Button
+                            title="Add Current Location"
+                            onPress={() => {
+                                console.log("Current Location Retrieval");
+                            }}
+                        />
                     </View>
                 </View>
             </Modal>
